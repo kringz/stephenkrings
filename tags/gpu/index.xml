@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Gpu on Stephen Krings</title>
+    <link>https://stephenkrings.com/tags/gpu/</link>
+    <description>Recent content in Gpu on Stephen Krings</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 15 Aug 2026 16:00:00 -0600</lastBuildDate>
+    <atom:link href="https://stephenkrings.com/tags/gpu/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Seven Local LLMs, One 12GB RTX 5070</title>
+      <link>https://stephenkrings.com/posts/seven-local-llms-rtx-5070/</link>
+      <pubDate>Sat, 15 Aug 2026 16:00:00 -0600</pubDate>
+      <guid>https://stephenkrings.com/posts/seven-local-llms-rtx-5070/</guid>
+      <description>&lt;p&gt;My RTX 5070 has 12GB of VRAM, which is enough for smaller local models but not enough to hold every model I wanted to try. The Windows PC with the 5070 attached also has 64GB of system RAM, so a practical solution is to let llama.cpp put as much as possible on the GPU and offload the remainder to RAM.&lt;/p&gt;
+&lt;p&gt;The result is a private local-model server with seven selectable models:&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Making Hugging Face Image Generation Fit on a 12GB RTX 5070</title>
+      <link>https://stephenkrings.com/posts/hugging-face-image-generation-rtx-5070-cpu-offload/</link>
+      <pubDate>Tue, 14 Jul 2026 19:58:00 -0600</pubDate>
+      <guid>https://stephenkrings.com/posts/hugging-face-image-generation-rtx-5070-cpu-offload/</guid>
+      <description>&lt;p&gt;Goal: wiring Hugging Face models into my local llm (Ollama) app, testing prompt-following, and seeing how far I can push a 12GB RTX 5070 before the system starts leaning hard on the CPU.&lt;/p&gt;
+&lt;p&gt;The short version: it works, but only because the stack is allowed to spill parts of the model back to system memory.&lt;/p&gt;
+&lt;h2 id=&#34;the-current-setup&#34;&gt;The current setup&lt;/h2&gt;
+&lt;p&gt;The image UI lives on my web server, but the GPU does not. The request path looks like this:&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Best of Both Worlds: Using a Gaming PC&#39;s RTX 5070 from a separate Linux workstation</title>
+      <link>https://stephenkrings.com/posts/rtx-5070-linux-gpu-server/</link>
+      <pubDate>Tue, 14 Jul 2026 01:05:00 -0600</pubDate>
+      <guid>https://stephenkrings.com/posts/rtx-5070-linux-gpu-server/</guid>
+      <description>&lt;p&gt;To be precise, this does not make the RTX appear as a local GPU on my workstation&amp;hellip;the programs run on the gaming PC, and I control them remotely over SSH.&lt;/p&gt;
+&lt;h2 id=&#34;the-setup&#34;&gt;The setup&lt;/h2&gt;
+&lt;p&gt;&lt;img alt=&#34;Diagram: Linux dev box connecting over ssh to the Windows gaming PC on port 2345 via netsh portproxy, which relays into WSL2 Ubuntu 24.04 with full GPU passthrough&#34; loading=&#34;lazy&#34; src=&#34;https://stephenkrings.com/images/gpu-setup-diagram.png&#34;&gt;&lt;/p&gt;
+&lt;p&gt;WSL2 gives the GPU to Linux via NVIDIA&amp;rsquo;s driver passthrough. &lt;code&gt;nvidia-smi&lt;/code&gt; works inside Ubuntu with zero driver installs on the Linux side. The trick is making it reachable and &lt;em&gt;keeping it alive&lt;/em&gt;:&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

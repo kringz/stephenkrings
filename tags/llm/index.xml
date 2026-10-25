@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Llm on Stephen Krings</title>
+    <link>https://stephenkrings.com/tags/llm/</link>
+    <description>Recent content in Llm on Stephen Krings</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 15 Aug 2026 16:00:00 -0600</lastBuildDate>
+    <atom:link href="https://stephenkrings.com/tags/llm/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Seven Local LLMs, One 12GB RTX 5070</title>
+      <link>https://stephenkrings.com/posts/seven-local-llms-rtx-5070/</link>
+      <pubDate>Sat, 15 Aug 2026 16:00:00 -0600</pubDate>
+      <guid>https://stephenkrings.com/posts/seven-local-llms-rtx-5070/</guid>
+      <description>&lt;p&gt;My RTX 5070 has 12GB of VRAM, which is enough for smaller local models but not enough to hold every model I wanted to try. The Windows PC with the 5070 attached also has 64GB of system RAM, so a practical solution is to let llama.cpp put as much as possible on the GPU and offload the remainder to RAM.&lt;/p&gt;
+&lt;p&gt;The result is a private local-model server with seven selectable models:&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

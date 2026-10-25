@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Wireguard on Stephen Krings</title>
+    <link>https://stephenkrings.com/tags/wireguard/</link>
+    <description>Recent content in Wireguard on Stephen Krings</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 14 Jul 2026 02:30:00 -0600</lastBuildDate>
+    <atom:link href="https://stephenkrings.com/tags/wireguard/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>A Home VPN Is Still One of the Best Homelab Tools</title>
+      <link>https://stephenkrings.com/posts/home-vpn-iphone-homelab/</link>
+      <pubDate>Tue, 14 Jul 2026 02:30:00 -0600</pubDate>
+      <guid>https://stephenkrings.com/posts/home-vpn-iphone-homelab/</guid>
+      <description>&lt;p&gt;Running a VPN at home is one of the easiest homelab upgrades.&lt;/p&gt;
+&lt;p&gt;If you have a static IP, setting up WireGuard or OpenVPN on an iPhone is straightforward. Create a client profile, import it into the app, and turn it on when you are away.&lt;/p&gt;
+&lt;p&gt;Your phone then connects through your home network. That lets you SSH into a home server or open a website restricted to your home IP without making it public.&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

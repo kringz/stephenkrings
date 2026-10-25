@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en" dir="auto" data-theme="auto">
+
+<head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="robots" content="index, follow">
+<title>Making Hugging Face Image Generation Fit on a 12GB RTX 5070 | Stephen Krings</title>
+<meta name="keywords" content="hugging-face, image-generation, gpu, cuda, homelab">
+<meta name="description" content="Goal: wiring Hugging Face models into my local llm (Ollama) app, testing prompt-following, and seeing how far I can push a 12GB RTX 5070 before the system starts leaning hard on the CPU.
+The short version: it works, but only because the stack is allowed to spill parts of the model back to system memory.
+The current setup
+The image UI lives on my web server, but the GPU does not. The request path looks like this:">
+<meta name="author" content="">
+<link rel="canonical" href="index.html">
+<link crossorigin="anonymous" href="../../assets/css/stylesheet.d998f720c48fda644e71b4dddb8edbc920e577b7494055699d626bc98218fb18.css" integrity="sha256-2Zj3IMSP2mROcbTd247bySDld7dJQFVpnWJryYIY&#43;xg=" rel="preload stylesheet" as="style">
+<link rel="icon" href="../../favicon.ico">
+<link rel="icon" type="image/png" sizes="16x16" href="../../favicon-16x16.png">
+<link rel="icon" type="image/png" sizes="32x32" href="../../favicon-32x32.png">
+<link rel="apple-touch-icon" href="../../apple-touch-icon.png">
+<link rel="mask-icon" href="https://stephenkrings.com/safari-pinned-tab.svg">
+<meta name="theme-color" content="#2e2e33">
+<meta name="msapplication-TileColor" content="#2e2e33">
+<link rel="alternate" hreflang="en" href="index.html">
+<noscript>
+    <style>
+        #theme-toggle,
+        .top-link {
+            display: none;
+        }
+
+    </style>
+    <style>
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --theme: rgb(29, 30, 32);
+                --entry: rgb(46, 46, 51);
+                --primary: rgb(218, 218, 219);
+                --secondary: rgb(155, 156, 157);
+                --tertiary: rgb(65, 66, 68);
+                --content: rgb(196, 196, 197);
+                --code-block-bg: rgb(46, 46, 51);
+                --code-bg: rgb(55, 56, 62);
+                --border: rgb(51, 51, 51);
+                color-scheme: dark;
+            }
+
+            .list {
+                background: var(--theme);
+            }
+
+            .toc {
+                background: var(--entry);
+            }
+        }
+
+    </style>
+</noscript>
+<script>
+    if (localStorage.getItem("pref-theme") === "dark") {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else if (localStorage.getItem("pref-theme") === "light") {
+       document.querySelector("html").dataset.theme = 'light';
+    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        document.querySelector("html").dataset.theme = 'dark';
+    } else {
+        document.querySelector("html").dataset.theme = 'light';
+    }
+
+</script><meta property="og:url" content="https://stephenkrings.com/posts/hugging-face-image-generation-rtx-5070-cpu-offload/">
+  <meta property="og:site_name" content="Stephen Krings">
+  <meta property="og:title" content="Making Hugging Face Image Generation Fit on a 12GB RTX 5070">
+  <meta property="og:description" content="Goal: wiring Hugging Face models into my local llm (Ollama) app, testing prompt-following, and seeing how far I can push a 12GB RTX 5070 before the system starts leaning hard on the CPU.
+The short version: it works, but only because the stack is allowed to spill parts of the model back to system memory.
+The current setup The image UI lives on my web server, but the GPU does not. The request path looks like this:">
+  <meta property="og:locale" content="en_us">
+  <meta property="og:type" content="article">
+    <meta property="article:section" content="posts">
+    <meta property="article:published_time" content="2026-07-14T19:58:00-06:00">
+    <meta property="article:modified_time" content="2026-07-14T19:58:00-06:00">
+    <meta property="article:tag" content="Hugging-Face">
+    <meta property="article:tag" content="Image-Generation">
+    <meta property="article:tag" content="Gpu">
+    <meta property="article:tag" content="Cuda">
+    <meta property="article:tag" content="Homelab">
+
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Making Hugging Face Image Generation Fit on a 12GB RTX 5070">
+  <meta name="twitter:description" content="Goal: wiring Hugging Face models into my local llm (Ollama) app, testing prompt-following, and seeing how far I can push a 12GB RTX 5070 before the system starts leaning hard on the CPU.
+The short version: it works, but only because the stack is allowed to spill parts of the model back to system memory.
+The current setup The image UI lives on my web server, but the GPU does not. The request path looks like this:">
+
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position":  1 ,
+      "name": "Posts",
+      "item": "https://stephenkrings.com/posts/"
+    }, 
+    {
+      "@type": "ListItem",
+      "position":  2 ,
+      "name": "Making Hugging Face Image Generation Fit on a 12GB RTX 5070",
+      "item": "https://stephenkrings.com/posts/hugging-face-image-generation-rtx-5070-cpu-offload/"
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Making Hugging Face Image Generation Fit on a 12GB RTX 5070",
+  "name": "Making Hugging Face Image Generation Fit on a 12GB RTX 5070",
+  "description": "Goal: wiring Hugging Face models into my local llm (Ollama) app, testing prompt-following, and seeing how far I can push a 12GB RTX 5070 before the system starts leaning hard on the CPU.\nThe short version: it works, but only because the stack is allowed to spill parts of the model back to system memory.\nThe current setup The image UI lives on my web server, but the GPU does not. The request path looks like this:\n",
+  "keywords": [
+    "hugging-face", "image-generation", "gpu", "cuda", "homelab"
+  ],
+  "articleBody": "Goal: wiring Hugging Face models into my local llm (Ollama) app, testing prompt-following, and seeing how far I can push a 12GB RTX 5070 before the system starts leaning hard on the CPU.\nThe short version: it works, but only because the stack is allowed to spill parts of the model back to system memory.\nThe current setup The image UI lives on my web server, but the GPU does not. The request path looks like this:\n/ui -\u003e Flask app on web server -\u003e SSH tunnel to the GPU box -\u003e WSL Ubuntu image server -\u003e RTX 5070 The GPU server is a small diffusers service running behind Gunicorn. Right now I have three model paths:\nSDXL for the fast path. Stable Diffusion 3.5 Medium for better prompt following. FLUX.1-schnell for sharper experiments when I can tolerate slower runs. SDXL fits the 5070 pretty comfortably in fp16. The more interesting cases are SD 3.5 Medium and FLUX. Those are Hugging Face/diffusers pipelines with CPU offload enabled so they can run on a 12GB card at all.\nThe screenshot The card is sitting around 11GB used out of 12GB..\nThat is what I was calling “CPU overflow” while working on it. More precisely, it is CPU offload: diffusers is moving parts of the model between CPU memory and GPU memory so the model can fit. My PC is completely useless in the meantime. The upside is obvious. A model that does not fit cleanly in VRAM can still run. The downside is also obvious. PCIe transfers and CPU-side work become part of the inference loop, so GPU utilization can look weird and the whole request gets slower (by a lot).\nThe confusing part is that nvtop can make the GPU look idle while the job is still very much in progress. If the pipeline is between GPU kernels, loading weights, moving blocks, or waiting on CPU-side work, GPU utilization can read near zero even though the run is not stalled.\nWhat I changed to make it survivable The server only runs one generation at a time. That is not elegant, but it is the correct tradeoff for this machine.\nThe llm webapp also treats image generation as an async job. It returns quickly, then the browser polls for the result. That avoids the Cloudflare first-byte timeout problem (yes, I’m using Cloudflare…long story I will explain another time), and it makes slow CPU-offloaded generations acceptable instead of looking like the page froze.\nThere is also cleanup logic around the GPU:\nunload idle image models after a few minutes empty the CUDA cache after unloads evict other local GPU workloads before large image generations retry once after an out-of-memory error That is the difference between a fun demo and something I can actually leave running on the homelab.\nWhat I learned The 12GB 5070 is enough for useful local image generation, but it is not magic. SDXL is the comfortable baseline. FLUX and SD 3.5 Medium are possible because Hugging Face/diffusers gives me the escape hatch of CPU offload.\nThat escape hatch has a cost. When the model spills over, latency gets worse and monitoring gets less intuitive. But for a local tool where I care more about control than throughput, that is a good trade.\nThe next step is making the UI more honest about what is happening.\n",
+  "wordCount" : "557",
+  "inLanguage": "en",
+  "datePublished": "2026-07-14T19:58:00-06:00",
+  "dateModified": "2026-07-14T19:58:00-06:00",
+  "mainEntityOfPage": {
+    "@type": "WebPage",
+    "@id": "https://stephenkrings.com/posts/hugging-face-image-generation-rtx-5070-cpu-offload/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Stephen Krings",
+    "logo": {
+      "@type": "ImageObject",
+      "url": "https://stephenkrings.com/favicon.ico"
+    }
+  }
+}
+</script>
+</head>
+<body id="top">
+    <header class="header">
+    <nav class="header-nav">
+        <div class="logo">
+            <a href="../../index.html" accesskey="h" title="Stephen Krings (Alt + H)">Stephen Krings</a>
+            <div class="logo-switches">
+                <button id="theme-toggle" class="theme-toggle" accesskey="t" title="(Alt + T)" aria-label="Toggle theme">
+                    <svg class="moon" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                    <svg class="sun" xmlns="http://www.w3.org/2000/svg" width="17" height="17" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        <ul id="menu" class="menu">
+            <li>
+                <a href="../index.html" title="Posts">
+                    <span>Posts</span>
+                </a>
+            </li>
+            <li>
+                <a href="../../about/index.html" title="About">
+                    <span>About</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</header>
+<main class="main">
+
+<article class="post-single">
+  <header class="post-header">
+    
+    <h1 class="post-title entry-hint-parent">
+      Making Hugging Face Image Generation Fit on a 12GB RTX 5070
+    </h1>
+    <div class="post-meta">
+
+<span title='2026-07-14 19:58:00 -0600 -0600'>July 14, 2026</span>&nbsp;·&nbsp;<span>3 min</span>
+
+</div>
+  </header> 
+  <div class="post-content md-content"><p>Goal: wiring Hugging Face models into my local llm (Ollama) app, testing prompt-following, and seeing how far I can push a 12GB RTX 5070 before the system starts leaning hard on the CPU.</p>
+<p>The short version: it works, but only because the stack is allowed to spill parts of the model back to system memory.</p>
+<h2 id="the-current-setup">The current setup<a hidden class="anchor" aria-hidden="true" href="index.html#the-current-setup">#</a></h2>
+<p>The image UI lives on my web server, but the GPU does not. The request path looks like this:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-text" data-lang="text"><span style="display:flex;"><span>/ui
+</span></span><span style="display:flex;"><span>  -&gt; Flask app on web server
+</span></span><span style="display:flex;"><span>  -&gt; SSH tunnel to the GPU box
+</span></span><span style="display:flex;"><span>  -&gt; WSL Ubuntu image server
+</span></span><span style="display:flex;"><span>  -&gt; RTX 5070
+</span></span></code></pre></div><p>The GPU server is a small diffusers service running behind Gunicorn. Right now I have three model paths:</p>
+<ul>
+<li><strong>SDXL</strong> for the fast path.</li>
+<li><strong>Stable Diffusion 3.5 Medium</strong> for better prompt following.</li>
+<li><strong>FLUX.1-schnell</strong> for sharper experiments when I can tolerate slower runs.</li>
+</ul>
+<p>SDXL fits the 5070 pretty comfortably in fp16. The more interesting cases are SD 3.5 Medium and FLUX. Those are Hugging Face/diffusers pipelines with CPU offload enabled so they can run on a 12GB card at all.</p>
+<h2 id="the-screenshot">The screenshot<a hidden class="anchor" aria-hidden="true" href="index.html#the-screenshot">#</a></h2>
+<p><img alt="nvtop showing the RTX 5070 nearly full on memory while the image-generation Python process uses almost a full CPU core" loading="lazy" src="../../images/rtx-5070-image-gen-cpu-offload.jpeg"></p>
+<p>The card is sitting around 11GB used out of 12GB..</p>
+<p>That is what I was calling &ldquo;CPU overflow&rdquo; while working on it. More precisely, it is CPU offload: diffusers is moving parts of the model between CPU memory and GPU memory so the model can fit. My PC is completely useless in the meantime. The upside is obvious. A model that does not fit cleanly in VRAM can still run. The downside is also obvious. PCIe transfers and CPU-side work become part of the inference loop, so GPU utilization can look weird and the whole request gets slower (by a lot).</p>
+<p>The confusing part is that <code>nvtop</code> can make the GPU look idle while the job is still very much in progress. If the pipeline is between GPU kernels, loading weights, moving blocks, or waiting on CPU-side work, GPU utilization can read near zero even though the run is not stalled.</p>
+<h2 id="what-i-changed-to-make-it-survivable">What I changed to make it survivable<a hidden class="anchor" aria-hidden="true" href="index.html#what-i-changed-to-make-it-survivable">#</a></h2>
+<p>The server only runs one generation at a time. That is not elegant, but it is the correct tradeoff for this machine.</p>
+<p>The llm webapp also treats image generation as an async job. It returns quickly, then the browser polls for the result. That avoids the Cloudflare first-byte timeout problem (yes, I&rsquo;m using Cloudflare&hellip;long story I will explain another time), and it makes slow CPU-offloaded generations acceptable instead of looking like the page froze.</p>
+<p>There is also cleanup logic around the GPU:</p>
+<ul>
+<li>unload idle image models after a few minutes</li>
+<li>empty the CUDA cache after unloads</li>
+<li>evict other local GPU workloads before large image generations</li>
+<li>retry once after an out-of-memory error</li>
+</ul>
+<p>That is the difference between a fun demo and something I can actually leave running on the homelab.</p>
+<h2 id="what-i-learned">What I learned<a hidden class="anchor" aria-hidden="true" href="index.html#what-i-learned">#</a></h2>
+<p>The 12GB 5070 is enough for useful local image generation, but it is not magic. SDXL is the comfortable baseline. FLUX and SD 3.5 Medium are possible because Hugging Face/diffusers gives me the escape hatch of CPU offload.</p>
+<p>That escape hatch has a cost. When the model spills over, latency gets worse and monitoring gets less intuitive. But for a local tool where I care more about control than throughput, that is a good trade.</p>
+<p>The next step is making the UI more honest about what is happening.</p>
+
+
+  </div>
+
+  <footer class="post-footer">
+    <ul class="post-tags">
+      <li><a href="../../tags/hugging-face/index.html">Hugging-Face</a></li>
+      <li><a href="../../tags/image-generation/index.html">Image-Generation</a></li>
+      <li><a href="../../tags/gpu/index.html">Gpu</a></li>
+      <li><a href="../../tags/cuda/index.html">Cuda</a></li>
+      <li><a href="../../tags/homelab/index.html">Homelab</a></li>
+    </ul>
+<nav class="paginav">
+  <a class="prev" href="../seven-local-llms-rtx-5070/index.html">
+    <span class="title">« Prev</span>
+    <span>Seven Local LLMs, One 12GB RTX 5070</span>
+  </a>
+  <a class="next" href="../home-vpn-iphone-homelab/index.html">
+    <span class="title">Next »</span>
+    <span>A Home VPN Is Still One of the Best Homelab Tools</span>
+  </a>
+</nav>
+
+  </footer>
+</article>
+    </main>
+    
+<footer class="footer">
+        <span>&copy; 2026 <a href="../../index.html">Stephen Krings</a></span> · 
+
+    
+    
+    <span>
+        Powered by
+        <a href="https://gohugo.io/?utm_source=papermod" rel="noopener" target="_blank">Hugo</a> &
+        <a href="https://github.com/adityatelange/hugo-PaperMod/" rel="noopener" target="_blank">PaperMod</a>
+    </span>
+</footer>
+<a href="index.html#top" id="top-link" class="top-link hidden" aria-label="go to top" title="Go to Top (Alt + G)" accesskey="g">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round" class="feather feather-chevrons-up">
+        <polyline points="17 11 12 6 7 11"></polyline>
+        <polyline points="17 18 12 13 7 18"></polyline>
+    </svg>
+</a><div class="image-lightbox" id="image-lightbox" aria-hidden="true" role="dialog" aria-modal="true">
+  <button class="image-lightbox__close" type="button" aria-label="Close enlarged image">&times;</button>
+  <img class="image-lightbox__image" alt="">
+</div>
+<script>
+  (() => {
+    const lightbox = document.getElementById("image-lightbox");
+    if (!lightbox) return;
+
+    const image = lightbox.querySelector(".image-lightbox__image");
+    const closeButton = lightbox.querySelector(".image-lightbox__close");
+    const imageLinks = document.querySelectorAll('.post-content a[href$=".jpg"] img, .post-content a[href$=".jpeg"] img, .post-content a[href$=".png"] img, .post-content a[href$=".webp"] img, .post-content a[href$=".gif"] img');
+
+    const closeLightbox = () => {
+      lightbox.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("image-lightbox-open");
+      image.removeAttribute("src");
+      image.alt = "";
+    };
+
+    imageLinks.forEach((img) => {
+      const link = img.closest("a");
+      link.classList.add("image-lightbox-link");
+      link.addEventListener("click", (event) => {
+        event.preventDefault();
+        image.src = link.href;
+        image.alt = img.alt || "Enlarged image";
+        lightbox.setAttribute("aria-hidden", "false");
+        document.body.classList.add("image-lightbox-open");
+        closeButton.focus();
+      });
+    });
+
+    closeButton.addEventListener("click", closeLightbox);
+    image.addEventListener("click", closeLightbox);
+    lightbox.addEventListener("click", (event) => {
+      if (event.target === lightbox) closeLightbox();
+    });
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && lightbox.getAttribute("aria-hidden") === "false") closeLightbox();
+    });
+  })();
+</script>
+
+
+<script>
+    let menu = document.getElementById('menu');
+    if (menu) {
+        
+        const scrollPosition = localStorage.getItem("menu-scroll-position");
+        if (scrollPosition) {
+            menu.scrollLeft = parseInt(scrollPosition, 10);
+        }
+        
+        menu.onscroll = function () {
+            localStorage.setItem("menu-scroll-position", menu.scrollLeft);
+        }
+    }
+
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener("click", function (e) {
+            e.preventDefault();
+            var id = this.getAttribute("href").substr(1);
+            if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView({
+                    behavior: "smooth"
+                });
+            } else {
+                document.querySelector(`[id='${decodeURIComponent(id)}']`).scrollIntoView();
+            }
+            if (id === "top") {
+                history.replaceState(null, null, " ");
+            } else {
+                history.pushState(null, null, `#${id}`);
+            }
+        });
+    });
+
+</script>
+<script>
+    var toplink = document.getElementById("top-link");
+    window.onscroll = function () {
+        const scrollThreshold = window.innerHeight;
+        if (document.body.scrollTop > scrollThreshold || document.documentElement.scrollTop > scrollThreshold) {
+            toplink.classList.remove("hidden");
+        } else {
+            toplink.classList.add("hidden");
+        }
+    };
+
+</script>
+<script>
+    document.getElementById("theme-toggle").addEventListener("click", () => {
+        const html = document.querySelector("html");
+        if (html.dataset.theme === "dark") {
+            html.dataset.theme = 'light';
+            localStorage.setItem("pref-theme", 'light');
+        } else {
+            html.dataset.theme = 'dark';
+            localStorage.setItem("pref-theme", 'dark');
+        }
+    })
+
+</script>
+<script>
+    document.querySelectorAll('pre > code').forEach((codeblock) => {
+        const container = codeblock.parentNode.parentNode;
+
+        const copybutton = document.createElement('button');
+        copybutton.classList.add('copy-code');
+        copybutton.innerHTML = 'copy';
+
+        function copyingDone() {
+            copybutton.innerHTML = 'copied!';
+            setTimeout(() => {
+                copybutton.innerHTML = 'copy';
+            }, 2000);
+        }
+
+        copybutton.addEventListener('click', (cb) => {
+            if ('clipboard' in navigator) {
+                navigator.clipboard.writeText(codeblock.textContent);
+                copyingDone();
+                return;
+            }
+
+            const range = document.createRange();
+            range.selectNodeContents(codeblock);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            try {
+                document.execCommand('copy');
+                copyingDone();
+            } catch (e) { };
+            selection.removeRange(range);
+        });
+
+        if (container.classList.contains("highlight")) {
+            container.appendChild(copybutton);
+        } else if (container.parentNode.firstChild == container) {
+            
+        } else if (codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.nodeName == "TABLE") {
+            
+            codeblock.parentNode.parentNode.parentNode.parentNode.parentNode.appendChild(copybutton);
+        } else {
+            
+            codeblock.parentNode.appendChild(copybutton);
+        }
+    });
+</script>
+</body>
+
+</html>

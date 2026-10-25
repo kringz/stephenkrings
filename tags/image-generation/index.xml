@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>Image-Generation on Stephen Krings</title>
+    <link>https://stephenkrings.com/tags/image-generation/</link>
+    <description>Recent content in Image-Generation on Stephen Krings</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Tue, 14 Jul 2026 19:58:00 -0600</lastBuildDate>
+    <atom:link href="https://stephenkrings.com/tags/image-generation/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Making Hugging Face Image Generation Fit on a 12GB RTX 5070</title>
+      <link>https://stephenkrings.com/posts/hugging-face-image-generation-rtx-5070-cpu-offload/</link>
+      <pubDate>Tue, 14 Jul 2026 19:58:00 -0600</pubDate>
+      <guid>https://stephenkrings.com/posts/hugging-face-image-generation-rtx-5070-cpu-offload/</guid>
+      <description>&lt;p&gt;Goal: wiring Hugging Face models into my local llm (Ollama) app, testing prompt-following, and seeing how far I can push a 12GB RTX 5070 before the system starts leaning hard on the CPU.&lt;/p&gt;
+&lt;p&gt;The short version: it works, but only because the stack is allowed to spill parts of the model back to system memory.&lt;/p&gt;
+&lt;h2 id=&#34;the-current-setup&#34;&gt;The current setup&lt;/h2&gt;
+&lt;p&gt;The image UI lives on my web server, but the GPU does not. The request path looks like this:&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>
